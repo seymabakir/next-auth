@@ -1,36 +1,238 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Auth0 + NextAuth.js Authentication System
 
-## Getting Started
+Bu proje, Auth0 üzerinden kullanıcı girişinin yapıldığı, JWT tabanlı oturum kontrolü ile sayfa erişimi kısıtlanan, SOLID prensiplerine ve 12Factor ilkelerine uygun, Next.js + NextAuth temelli bir kimlik doğrulama ve yetkilendirme sistemidir.
 
-First, run the development server:
+## 🚀 Teknolojiler & Araçlar
+
+- **Next.js 14+** (App Router)
+- **Auth0** (OAuth Provider)
+- **NextAuth.js** (Authentication Framework)
+- **JWT** (JSON Web Token)
+- **TypeScript**
+- **TailwindCSS**
+- **Git / GitHub**
+
+## 📋 Özellikler
+
+- ✅ Auth0 entegrasyonu
+- ✅ JWT tabanlı oturum yönetimi
+- ✅ Middleware ile sayfa koruma
+- ✅ SOLID prensiplerine uygun kod yapısı
+- ✅ 12Factor App uyumlu konfigürasyon
+- ✅ TypeScript desteği
+- ✅ Responsive UI (TailwindCSS)
+- ✅ Role-based access control
+- ✅ Custom error handling
+
+## 🛠️ Kurulum
+
+### 1. Projeyi Klonlayın
+
+```bash
+git clone <repository-url>
+cd auth0-nextauth-app
+```
+
+### 2. Bağımlılıkları Yükleyin
+
+```bash
+npm install
+```
+
+### 3. Environment Variables
+
+`.env.local` dosyasını oluşturun ve Auth0 bilgilerinizi ekleyin:
+
+```env
+# Auth0 Configuration
+AUTH0_CLIENT_ID=your-client-id
+AUTH0_CLIENT_SECRET=your-client-secret
+AUTH0_ISSUER=https://your-domain.auth0.com
+
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key
+
+# Environment
+NODE_ENV=development
+```
+
+### 4. Auth0 Kurulumu
+
+1. [Auth0 Dashboard](https://manage.auth0.com/) adresine gidin
+2. Yeni bir uygulama oluşturun
+3. Application Type: "Regular Web Applications" seçin
+4. Settings sekmesinde:
+   - Allowed Callback URLs: `http://localhost:3000/api/auth/callback/auth0`
+   - Allowed Logout URLs: `http://localhost:3000`
+   - Allowed Web Origins: `http://localhost:3000`
+
+### 5. Projeyi Çalıştırın
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Proje http://localhost:3000 adresinde çalışacaktır.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Proje Yapısı
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/auth/          # NextAuth API routes
+│   ├── auth/              # Auth pages (signin, error)
+│   ├── dashboard/         # Protected dashboard page
+│   └── layout.tsx         # Root layout
+├── components/            # React components
+│   ├── hoc/              # Higher Order Components
+│   └── providers/        # Context providers
+├── config/               # Configuration files
+├── services/             # Business logic services
+├── types/                # TypeScript type definitions
+└── middleware.ts         # Next.js middleware
+```
 
-## Learn More
+## 🔐 Authentication Flow
 
-To learn more about Next.js, take a look at the following resources:
+1. **Kullanıcı girişi**: `/auth/signin` sayfasından Auth0 ile giriş
+2. **Callback**: Auth0'dan gelen callback `/api/auth/callback/auth0`
+3. **JWT Token**: NextAuth.js JWT token oluşturur
+4. **Middleware**: Her sayfa isteğinde token kontrolü
+5. **Protected Routes**: Yetkilendirme kontrolü ile sayfa erişimi
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🏗️ SOLID Prensipleri
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Single Responsibility Principle (SRP)
+- `AuthService`: Sadece authentication işlemleri
+- `EnvironmentConfigService`: Sadece konfigürasyon yönetimi
 
-## Deploy on Vercel
+### Open/Closed Principle (OCP)
+- `IAuthService` interface ile genişletilebilir yapı
+- Provider-based authentication sistemi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Liskov Substitution Principle (LSP)
+- Interface'ler doğru şekilde implement edilmiş
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Interface Segregation Principle (ISP)
+- Küçük, spesifik interface'ler
+- `IAuthService` sadece auth işlemleri
+
+### Dependency Inversion Principle (DIP)
+- Service'ler interface'lere bağımlı
+- Dependency injection kullanımı
+
+## 📋 12Factor App Uyumluluğu
+
+### 1. Codebase
+- ✅ Tek repository, birden fazla deployment
+
+### 2. Dependencies
+- ✅ package.json ile explicit dependency declaration
+
+### 3. Config
+- ✅ Environment variables ile konfigürasyon
+- ✅ .env.local dosyası
+
+### 4. Backing Services
+- ✅ Auth0 external service entegrasyonu
+
+### 5. Build, Release, Run
+- ✅ npm scripts ile build process
+- ✅ Next.js build sistemi
+
+### 6. Processes
+- ✅ Stateless processes
+- ✅ Session data JWT ile taşınıyor
+
+### 7. Port Binding
+- ✅ PORT environment variable
+
+### 8. Concurrency
+- ✅ Next.js concurrent request handling
+
+### 9. Disposability
+- ✅ Graceful shutdown support
+
+### 10. Dev/Prod Parity
+- ✅ Environment-based configuration
+
+### 11. Logs
+- ✅ Console logging
+- ✅ Error handling
+
+### 12. Admin Processes
+- ✅ npm scripts ile admin tasks
+
+## 🧪 Test
+
+```bash
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Type checking
+npm run type-check
+```
+
+## 🚀 Deployment
+
+### Vercel
+
+```bash
+npm run build
+vercel --prod
+```
+
+### Docker
+
+```bash
+docker build -t auth0-nextauth-app .
+docker run -p 3000:3000 auth0-nextauth-app
+```
+
+## 📝 API Endpoints
+
+- `GET /api/auth/signin` - Sign in page
+- `GET /api/auth/signout` - Sign out
+- `GET /api/auth/session` - Get current session
+- `GET /api/auth/callback/auth0` - Auth0 callback
+
+## 🔒 Security
+
+- JWT token validation
+- CSRF protection
+- Secure session management
+- Environment variable protection
+- HTTPS enforcement (production)
+
+## 🤝 Katkıda Bulunma
+
+1. Fork yapın
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit yapın (`git commit -m 'Add amazing feature'`)
+4. Push yapın (`git push origin feature/amazing-feature`)
+5. Pull Request oluşturun
+
+## 📄 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır.
+
+## 🆘 Destek
+
+Herhangi bir sorun yaşarsanız:
+1. GitHub Issues'da sorun bildirin
+2. Documentation'ı kontrol edin
+3. Auth0 ve NextAuth.js dokümantasyonlarını inceleyin
+
+## 🔄 Changelog
+
+### v1.0.0
+- İlk sürüm
+- Auth0 entegrasyonu
+- NextAuth.js kurulumu
+- Middleware ile sayfa koruma
+- SOLID prensipleri uygulaması
+- 12Factor App uyumluluğu
