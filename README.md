@@ -21,8 +21,9 @@ Bu proje, Auth0 üzerinden kullanıcı girişinin yapıldığı, JWT tabanlı ot
 - ✅ 12Factor App uyumlu konfigürasyon
 - ✅ TypeScript desteği
 - ✅ Responsive UI (TailwindCSS)
-- ✅ Role-based access control
+- ✅ Role-based access control (Admin/User)
 - ✅ Custom error handling
+- ✅ Admin panel with restricted access
 
 ## 🛠️ Kurulum
 
@@ -75,6 +76,86 @@ npm run dev
 
 Proje http://localhost:3000 adresinde çalışacaktır.
 
+## 🛡️ Rol Bazlı Yetkilendirme Sistemi
+
+### Admin Rolü Yönetimi
+
+Bu proje **admin** ve **user** rolleri ile çalışır:
+
+- **Varsayılan Rol:** `user`
+- **Admin Erişimi:** `/admin` sayfasına sadece admin rolüne sahip kullanıcılar erişebilir
+
+### Kendinizi Admin Yapmak İçin
+
+#### 1. Auth0 Dashboard'da Rol Oluşturma
+
+1. Auth0 Dashboard'a gidin
+2. **User Management** > **Roles** bölümüne gidin
+3. **Create Role** butonuna tıklayın
+4. Rol bilgilerini girin:
+   - **Name:** `admin`
+   - **Description:** `Administrator role with full access`
+   - **Permissions:** Gerekli izinleri ekleyin
+5. **Create** butonuna tıklayın
+
+#### 2. Kullanıcıya Admin Rolü Atama
+
+1. **User Management** > **Users** bölümüne gidin
+2. Kendi kullanıcı hesabınızı seçin
+3. **Roles** sekmesine gidin
+4. **Assign Role** butonuna tıklayın
+5. Oluşturduğunuz admin rolünü seçin ve atayın
+
+#### 3. Auth0 Action Oluşturma
+
+Rolleri token'a eklemek için bir Action oluşturmanız gerekiyor:
+
+1. **Actions** > **Flows** > **Login** bölümüne gidin
+2. **Add Action** > **Build Custom** butonuna tıklayın
+3. Action'a isim verin: `Add User Roles to Token`
+4. Aşağıdaki kodu ekleyin:
+
+```javascript
+exports.onExecutePostLogin = async (event, api) => {
+  const namespace = 'https://app.com';
+  
+  // Kullanıcının rollerini al
+  const assignedRoles = (event.authorization || {}).roles || [];
+  
+  // Rolleri token'a ekle
+  api.idToken.setCustomClaim(`${namespace}/roles`, assignedRoles);
+  api.accessToken.setCustomClaim(`${namespace}/roles`, assignedRoles);
+  
+  // Admin rolü kontrolü
+  const isAdmin = assignedRoles.some(role => 
+    role.id === '' || 
+    role.name === 'admin'
+  );
+  
+  // Admin claim'i ekle
+  api.idToken.setCustomClaim(`${namespace}/isAdmin`, isAdmin);
+  api.accessToken.setCustomClaim(`${namespace}/isAdmin`, isAdmin);
+};
+```
+
+5. **Deploy** butonuna tıklayın
+6. Action'ı Login flow'una ekleyin
+
+#### 4. Test Etme
+
+1. Uygulamadan çıkış yapın
+2. Tekrar giriş yapın
+3. Ana sayfada admin rolü badge'ini kontrol edin
+4. `/admin` sayfasına erişebildiğinizi doğrulayın
+
+### Sayfa Erişim Kuralları
+
+| Sayfa | URL | Erişim | Rol Gereksinimi |
+|-------|-----|--------|-----------------|
+| Ana Sayfa | `/` | Tüm kullanıcılar | Yok |
+| Dashboard | `/dashboard` | Giriş yapmış kullanıcılar | User/Admin |
+| Admin Panel | `/admin` | Sadece admin | Admin |
+
 ## 📁 Proje Yapısı
 
 ```
@@ -83,12 +164,13 @@ src/
 │   ├── api/auth/          # NextAuth API routes
 │   ├── auth/              # Auth pages (signin, error)
 │   ├── dashboard/         # Protected dashboard page
+│   ├── admin/             # Admin panel (restricted access)
 │   └── layout.tsx         # Root layout
 ├── components/            # React components
-│   ├── hoc/              # Higher Order Components
+│   ├── hoc/              # Higher Order Components (withAuth)
 │   └── providers/        # Context providers
 ├── config/               # Configuration files
-├── services/             # Business logic services
+├── services/             # Business logic services (auth.service.ts)
 ├── types/                # TypeScript type definitions
 └── middleware.ts         # Next.js middleware
 ```
@@ -98,8 +180,9 @@ src/
 1. **Kullanıcı girişi**: `/auth/signin` sayfasından Auth0 ile giriş
 2. **Callback**: Auth0'dan gelen callback `/api/auth/callback/auth0`
 3. **JWT Token**: NextAuth.js JWT token oluşturur
-4. **Middleware**: Her sayfa isteğinde token kontrolü
-5. **Protected Routes**: Yetkilendirme kontrolü ile sayfa erişimi
+4. **Rol Kontrolü**: Auth0'dan gelen roller parse edilir
+5. **Middleware**: Her sayfa isteğinde token kontrolü
+6. **Protected Routes**: Yetkilendirme kontrolü ile sayfa erişimi
 
 ## 🏗️ SOLID Prensipleri
 
@@ -186,27 +269,53 @@ npm run build
 vercel --prod
 ```
 
-### Docker
-
-```bash
-docker build -t auth0-nextauth-app .
-docker run -p 3000:3000 auth0-nextauth-app
-```
-
 ## 📝 API Endpoints
 
 - `GET /api/auth/signin` - Sign in page
 - `GET /api/auth/signout` - Sign out
 - `GET /api/auth/session` - Get current session
-- `GET /api/auth/callback/auth0` - Auth0 callback
 
-## 🔒 Security
+## 🔧 Kullanım Örnekleri
 
-- JWT token validation
-- CSRF protection
-- Secure session management
-- Environment variable protection
-- HTTPS enforcement (production)
+### HOC ile Sayfa Koruması
+
+```typescript
+// Admin  için
+export default withAuth(AdminComponent, 'admin');
+
+// Kullanıcı sayfası için
+export default withAuth(UserComponent, 'user');
+```
+
+### Hook ile Rol Kontrolü
+
+```typescript
+import { useAuth } from '@/components/hoc/withAuth';
+
+function MyComponent() {
+  const { isAdmin, userRole } = useAuth();
+  
+  return (
+    <div>
+      {isAdmin && <AdminPanel />}
+      <p>Your role: {userRole}</p>
+    </div>
+  );
+}
+```
+
+## 🐛 Sorun Giderme
+
+### Rol Atanmıyor
+1. Auth0 Action'ın deploy edildiğini kontrol edin
+2. Kullanıcıya rol atandığını doğrulayın
+3. Namespace'in doğru olduğunu kontrol edin
+
+### Admin Sayfasına Erişim Yok
+1. Admin rolü ID'sini veya name'ini kontrol edin
+2. Environment variable'ların doğru tanımlandığını kontrol edin
+3. Kullanıcıya admin rolü atandığını doğrulayın
+4. Uygulamadan çıkış yapıp tekrar giriş yapın
 
 ## 🤝 Katkıda Bulunma
 

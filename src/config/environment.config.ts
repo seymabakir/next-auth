@@ -12,6 +12,9 @@ export interface EnvironmentConfig {
   DATABASE_URL?: string;
   
   API_BASE_URL: string;
+
+  AUTH0_ADMIN_ROLE_ID?: string;
+  AUTH0_ADMIN_ROLE_NAME: string;
 }
 
 class EnvironmentConfigService {
@@ -46,6 +49,8 @@ class EnvironmentConfigService {
       PORT: process.env.PORT || '3000',
       DATABASE_URL: process.env.DATABASE_URL,
       API_BASE_URL: process.env.API_BASE_URL || 'http://localhost:3000',
+      AUTH0_ADMIN_ROLE_ID: process.env.AUTH0_ADMIN_ROLE_ID,
+      AUTH0_ADMIN_ROLE_NAME: process.env.AUTH0_ADMIN_ROLE_NAME || 'admin',
     };
   }
 

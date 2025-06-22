@@ -3,9 +3,11 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/components/hoc/withAuth";
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const { isAdmin, userRole } = useAuth();
 
   if (status === "loading") {
     return (
@@ -46,9 +48,19 @@ export default function Home() {
                 )}
               </div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Welcome, {session.user?.name}!
+                Hoş geldin, {session.user?.name}!
               </h2>
               <p className="text-gray-600 mt-1">{session.user?.email}</p>
+              
+              <div className="mt-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  isAdmin 
+                    ? 'bg-purple-100 text-purple-800' 
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {userRole}
+                </span>
+              </div>
             </div>
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -60,7 +72,7 @@ export default function Home() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-green-800">
-                    You are successfully authenticated with Auth0!
+                    Auth0 ile başarıyla kimlik doğrulaması yapıldı!
                   </p>
                 </div>
               </div>
@@ -71,15 +83,46 @@ export default function Home() {
                 href="/dashboard"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
               >
-                Go to Dashboard
+                Dashboard'a Git
               </Link>
+              
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center"
+                >
+                  Admin Paneli
+                </Link>
+              )}
+              
               
               <button
                 onClick={() => signOut()}
                 className="w-full bg-red-500 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200"
               >
-                Sign Out
+                Çıkış Yap
               </button>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Rol Bilgileri:</h3>
+              <div className="text-xs text-gray-600 space-y-1">
+                {isAdmin ? (
+                  <>
+                    <p>• 🛡️ Admin yetkilerine sahipsiniz</p>
+                    <p>• Tüm kullanıcıları yönetebilirsiniz</p>
+                    <p>• Sistem ayarlarına erişebilirsiniz</p>
+                    <p>• Admin paneline erişebilirsiniz</p>
+                  </>
+                ) : (
+                  <>
+                    <p>• 👤 Standart kullanıcı yetkilerine sahipsiniz</p>
+                    <p>• Dashboard'a erişebilirsiniz</p>
+                    <p>• Kişisel bilgilerinizi yönetebilirsiniz</p>
+                    <p>• Admin yetkisi için yönetici ile iletişime geçin</p>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -91,21 +134,21 @@ export default function Home() {
                 </svg>
               </div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Welcome Guest
+                Hoş Geldiniz
               </h2>
               <p className="text-gray-600 mt-1">
-                Please sign in to continue
+                Devam etmek için giriş yapın
               </p>
             </div>
 
             <button
-              onClick={() => signIn("auth0")}
+              onClick={() => signIn("auth0", { prompt: "login" })}
               className="w-full bg-blue-500 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center space-x-2"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
               </svg>
-              <span>Sign In with Auth0</span>
+              <span>Auth0 ile Giriş Yap</span>
             </button>
           </div>
         )}
